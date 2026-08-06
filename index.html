@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خيوط النور - سُندس</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Aref+Ruqaa:wght@400;700&display=swap');
+
+        /* المتغيرات (لتبديل الثيمات) */
+        :root {
+            --bg-image: url('https://images.unsplash.com/photo-1490750967868-88cb45ce8ece?q=80&w=2000&auto=format&fit=crop');
+            --primary-color: #8b1e41;
+            --btn-hover: #a8244e;
+            --book-bg: #fffdf8;
+            --text-color: #2c2c2c;
+            --poetry-bg: rgba(235, 213, 222, 0.3);
+            --border-color: #d5a6b8;
+            --overlay-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* الأساسيات والخلفية */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Amiri', serif;
+            background: var(--bg-image) no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            transition: background 0.8s ease;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--overlay-color);
+            z-index: 0;
+            transition: background 0.8s ease;
+        }
+
+        /* شريط تغيير الثيمات */
+        .themes-container {
+            position: fixed; /* خليناه ثابت */
+            top: 20px;       /* مسافة من فوق */
+            right: 20px;     /* مسافة من اليمين */
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px 20px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.5s ease;
+        }
+
+        .themes-container:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .theme-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .theme-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* ألوان أزرار الثيمات */
+        .t-romantic { background: #8b1e41; }
+        .t-night { background: #1e3a8a; }
+        .t-nature { background: #166534; }
+        .t-classic { background: #78350f; }
+        .t-dreamy { background: #6b21a8; }
+
+        /* شاشة التحميل */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a1a1a;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.8s ease;
+        }
+        
+        .book-loader {
+            width: 80px;
+            height: 60px;
+            position: relative;
+            perspective: 200px;
+            margin-bottom: 20px;
+        }
+        
+        .book-loader .page-loader {
+            width: 40px;
+            height: 60px;
+            background: var(--border-color);
+            position: absolute;
+            top: 0;
+            right: 0;
+            transform-origin: left center;
+            animation: pageTurnLoader 1.5s infinite linear;
+            border-radius: 2px 5px 5px 2px;
+            box-shadow: inset -2px 0 5px rgba(0,0,0,0.1);
+        }
+        
+        .book-loader .page-loader:nth-child(2) { animation-delay: 0.15s; }
+        .book-loader .page-loader:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes pageTurnLoader {
+            0% { transform: rotateY(0deg); opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { transform: rotateY(-180deg); opacity: 0; }
+        }
+
+        .loader-text {
+            color: var(--border-color);
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 1.8rem;
+            letter-spacing: 2px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* حاوية الكتاب والأزرار */
+        .book-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1100px;
+            width: 95%;
+            z-index: 1;
+            position: relative;
+        }
+
+        /* تصميم الكتاب */
+        .book {
+            background-color: var(--book-bg);
+            background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+            width: 100%;
+            max-width: 750px;
+            height: 75vh;
+            max-height: 700px;
+            border-radius: 5px 15px 15px 5px;
+            box-shadow: inset 15px 0 20px rgba(0,0,0,0.05), 0 25px 50px rgba(0,0,0,0.6);
+            position: relative;
+            border-left: 8px solid rgba(0,0,0,0.2);
+            perspective: 2500px; 
+            transition: background-color 0.8s ease;
+        }
+
+        .book::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50px;
+            height: 100%;
+            background: linear-gradient(to left, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0) 100%);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* الصفحات وتأثير الـ 3D المطور */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px 50px;
+            box-sizing: border-box;
+            background-color: var(--book-bg);
+            background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+            border-radius: 5px 15px 15px 5px;
+            opacity: 0;
+            visibility: hidden;
+            transform-origin: right center;
+            overflow-y: auto;
+            transform-style: preserve-3d;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+            transition: background-color 0.8s ease;
+        }
+
+        .page.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 5;
+            transform: rotateY(0deg);
+        }
+
+        /* أنيميشن تقليب الكتاب المطور */
+        .page.flip-out-next { animation: flipOutNext 1s forwards cubic-bezier(0.645, 0.045, 0.355, 1); }
+        .page.flip-in-next { animation: flipInNext 1s forwards cubic-bezier(0.645, 0.045, 0.355, 1); }
+        .page.flip-out-prev { animation: flipOutPrev 1s forwards cubic-bezier(0.645, 0.045, 0.355, 1); }
+        .page.flip-in-prev { animation: flipInPrev 1s forwards cubic-bezier(0.645, 0.045, 0.355, 1); }
+
+        @keyframes flipOutNext {
+            0% { transform: rotateY(0deg); opacity: 1; z-index: 5; }
+            50% { box-shadow: -20px 0 30px rgba(0,0,0,0.3); opacity: 0.9; background-color: #ddd; }
+            100% { transform: rotateY(90deg); opacity: 0; z-index: 4; }
+        }
+        @keyframes flipInNext {
+            0% { transform: rotateY(-90deg); opacity: 0; z-index: 4; }
+            50% { box-shadow: -20px 0 30px rgba(0,0,0,0.3); opacity: 0.9; background-color: #eee; }
+            100% { transform: rotateY(0deg); opacity: 1; z-index: 5; }
+        }
+        @keyframes flipOutPrev {
+            0% { transform: rotateY(0deg); opacity: 1; z-index: 5; }
+            50% { box-shadow: 20px 0 30px rgba(0,0,0,0.3); opacity: 0.9; background-color: #ddd; }
+            100% { transform: rotateY(-90deg); opacity: 0; z-index: 4; }
+        }
+        @keyframes flipInPrev {
+            0% { transform: rotateY(90deg); opacity: 0; z-index: 4; }
+            50% { box-shadow: 20px 0 30px rgba(0,0,0,0.3); opacity: 0.9; background-color: #eee; }
+            100% { transform: rotateY(0deg); opacity: 1; z-index: 5; }
+        }
+
+        /* تنسيق النصوص والعناوين */
+        h1 {
+            font-family: 'Aref Ruqaa', serif;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 3.5rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            font-family: 'Aref Ruqaa', serif;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 2.2rem;
+            position: relative;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            border-bottom: 2px dashed var(--border-color);
+            transition: color 0.8s ease, border-color 0.8s ease;
+        }
+
+        h2::after {
+            content: '✿';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--book-bg);
+            padding: 0 15px;
+            color: var(--border-color);
+            font-size: 1.5rem;
+            transition: background-color 0.8s ease;
+        }
+        
+        .page-content {
+            line-height: 2.2;
+            font-size: 1.35rem;
+            color: var(--text-color);
+            padding-bottom: 30px;
+            transition: color 0.8s ease;
+        }
+
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .cover-page h2::after { display: none; }
+        .cover-page h2 { border: none; font-size: 2rem; color: var(--text-color); margin-top: -20px; }
+
+        .poetry {
+            white-space: pre-line;
+            text-align: center;
+            color: var(--primary-color);
+            font-weight: bold;
+            background: var(--poetry-bg);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px dashed var(--border-color);
+            margin: 30px auto;
+            width: 85%;
+            font-size: 1.4rem;
+            line-height: 2.3;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: background 0.8s ease, border-color 0.8s ease, color 0.8s ease;
+        }
+
+        .english-quote {
+            font-family: 'Georgia', serif;
+            font-style: italic;
+            color: #666;
+            text-align: left;
+            display: block;
+            margin: 20px 0;
+            direction: ltr;
+            border-left: 5px solid var(--border-color);
+            padding-left: 15px;
+            font-size: 1.2rem;
+            background: rgba(0,0,0,0.02);
+            padding: 10px 15px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        /* الأزرار */
+        .nav-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.3rem;
+            font-family: 'Aref Ruqaa', serif;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background-color: var(--btn-hover);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+        .nav-btn:disabled {
+            background-color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.5;
+            transform: none;
+        }
+
+        .page::-webkit-scrollbar { width: 8px; }
+        .page::-webkit-scrollbar-track { background: transparent; }
+        .page::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        .page::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
+
+        .page-number-indicator {
+            position: absolute;
+            top: -45px; 
+            bottom: auto; 
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(5px);
+            padding: 5px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            z-index: 50;
+            pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        @media (max-width: 850px) {
+            .book-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            max-width: 1100px;
+            width: 95%;
+            z-index: 10; 
+            position: relative;
+        }
+            .themes-container {
+                top: 10px;
+                right: 10px;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+            .theme-btn {
+                width: 28px;
+                height: 28px;
+            }
+            .book { 
+                margin-top: 35px; 
+                height: 75vh; 
+                max-height: 650px; 
+                border-left: 5px solid rgba(0,0,0,0.2); 
+            }
+            .nav-btn { padding: 10px 20px; font-size: 1.1rem; }
+            .page { 
+                padding: 25px 18px 45px 18px; 
+                overflow-y: auto; 
+            }
+            h1 { font-size: 2.2rem; }
+            h2 { 
+                font-size: 1.5rem; 
+                padding-bottom: 12px; 
+                margin-bottom: 20px; 
+                word-wrap: break-word; 
+            }
+            .page-content { 
+                font-size: 1.1rem; 
+                line-height: 1.9; 
+                word-wrap: break-word; 
+            }
+            .poetry { 
+                font-size: 1.1rem; 
+                width: 90%; 
+                padding: 15px; 
+                line-height: 2; 
+            }
+            .love-counter-box {
+                padding: 10px;
+                top: 10px;
+                left: 10px;
+            }
+            .love-icon { width: 45px; height: 45px; }
+            .counter-details { font-size: 0.8rem; }
+        }
+        .settings-sidebar {
+            position: fixed;
+            right: -320px;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: rgba(255, 253, 248, 0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: -5px 0 25px rgba(0,0,0,0.2);
+            transition: right 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* أنيميشن مرن وتحفة */
+            z-index: 1000;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .settings-sidebar.active {
+            right: 0;
+        }
+
+        .settings-sidebar h3 {
+            font-family: 'Aref Ruqaa', serif;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        /* زرار الإعدادات العائم */
+        .settings-btn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1001;
+            transition: all 0.3s ease;
+            font-size: 1.5rem;
+            border: 2px solid var(--border-color);
+        }
+
+        .settings-btn:hover {
+            transform: scale(1.1) rotate(45deg);
+        }
+
+        /* ستايل شريط الصوت */
+        .volume-slider {
+            width: 100%;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        /* ستايل عداد الحب والأيقونة فوق ع الشمال */
+        .love-counter-box {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+            transition: all 0.5s ease;
+        }
+
+        .love-counter-box:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: translateY(-5px);
+        }
+
+        .love-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            animation: pulse-icon 2s infinite;
+        }
+
+        @keyframes pulse-icon {
+            0% { box-shadow: 0 0 0 0 rgba(139, 30, 65, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(139, 30, 65, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 30, 65, 0); }
+        }
+
+        .counter-details {
+            display: flex;
+            flex-direction: column;
+            color: var(--text-color);
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        .counter-details .big-time {
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            font-family: 'Aref Ruqaa', serif;
+        }
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1; 
+        }
+        .polaroid-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .polaroid-card {
+            background: #fff;
+            padding: 12px 12px 25px 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-radius: 4px;
+            transition: all 0.4s ease;
+            width: 42%;
+            max-width: 200px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #eaeaea;
+        }
+        .polaroid-card:nth-child(odd) {
+            transform: rotate(-3deg);
+        }
+        .polaroid-card:nth-child(even) {
+            transform: rotate(3deg);
+        }
+        .polaroid-card:hover {
+            transform: scale(1.1) rotate(0deg);
+            z-index: 10;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+        }
+        .polaroid-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+        .polaroid-caption {
+            font-family: 'Aref Ruqaa', serif;
+            color: #444;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        .reply-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #25D366;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            font-size: 1.2rem;
+            font-family: 'Aref Ruqaa', serif;
+            border-radius: 50px;
+            margin-top: 25px;
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .reply-btn:hover {
+            background-color: #1eb956;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(37, 211, 102, 0.6);
+        }
+        .whatsapp-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: #25D366;
+            color: #ffffff !important;
+            padding: 12px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-family: 'Aref Ruqaa', serif;
+            font-size: 1.4rem;
+            margin-top: 25px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="particleCanvas"></canvas>
+
+    <audio id="bgMusic" loop>
+        <source src="Music/music.mp3" type="audio/mpeg">
+    </audio>
+
+    <audio id="pageTurnSound">
+        <source src="Sound_Effect/page_flip.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="settings-btn" id="settingsToggle" title="الإعدادات">⚙️</div>
+
+    <div class="settings-sidebar" id="sidebar">
+        <h3>إعدادات الموسيقى 🎵</h3>
+        <label for="volumeControl" style="font-weight: bold; color: var(--text-color); margin-bottom: 10px;">مستوى الصوت</label>
+        <input type="range" id="volumeControl" class="volume-slider" min="0" max="1" step="0.01" value="0.5">
+        <br>
+        <button onclick="togglePlay()" class="nav-btn" style="padding: 10px 20px; font-size: 1rem;" id="playBtn">تشغيل / إيقاف</button>
+    </div>
+
+    <div class="love-counter-box">
+        <img src="Icon/icon.jpg" alt="Icon" class="love-icon">
+        <div class="counter-details">
+            <span class="big-time">مع بعض بقالنا:</span>
+            <span id="time-text">جاري الحساب...</span>
+            <span style="direction: ltr; margin-top: 5px;" id="time-clock">00:00:00</span>
+        </div>
+    </div>
+
+    <!-- شاشة التحميل -->
+    <div id="loader">
+        <div class="book-loader">
+            <div class="page-loader"></div>
+            <div class="page-loader"></div>
+            <div class="page-loader"></div>
+        </div>
+        <div class="loader-text">جاري تحميل خيوط النور...</div>
+    </div>
+
+    <!-- الطبقة السوداء الشفافة فوق الخلفية -->
+    <div class="overlay"></div>
+
+    <!-- أزرار تغيير الثيمات -->
+    <div class="themes-container">
+        <div class="theme-btn t-romantic" onclick="setTheme(0)" title="رومانسي (ورود حمراء/وردية)"></div>
+        <div class="theme-btn t-night" onclick="setTheme(1)" title="ليلي (ورود زرقاء/سماء)"></div>
+        <div class="theme-btn t-nature" onclick="setTheme(2)" title="طبيعة (أشجار وورود خضراء)"></div>
+        <div class="theme-btn t-classic" onclick="setTheme(3)" title="كلاسيكي (أوراق خريفية وعُتق)"></div>
+        <div class="theme-btn t-dreamy" onclick="setTheme(4)" title="حالم (ورود بنفسجية/لافندر)"></div>
+    </div>
+    
+    <div class="book-wrapper">
+        <button id="prevBtn" class="nav-btn" onclick="turnPage('prev')" disabled>&#10095; السابق</button>
+
+        <div class="book" id="bookContent">
+            <div class="page-number-indicator" id="pageIndicator">صفحة 1 من 11</div>
+            <!-- الغلاف -->
+            <div class="page active cover-page">
+                <div class="page-content" style="text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; background: none;">
+                    <h1>📖 خيوط النور</h1>
+                    <h2>من قسوة الأيام إلى سَكينة "سُندس"</h2>
+                    <br>
+                    <p style="font-size: 1.4rem; opacity: 0.8; font-style: italic;">"رحلة مستمرة، يجمعهم فيها وعد بالبقاء..."</p>
+                    <p style="font-size: 1.3rem; margin-top: 30px; font-weight: bold; color: var(--primary-color); font-family: 'Georgia', serif;">كتب بواسطه: Mohammed Saad </p>
+                </div>
+            </div>
+
+        <div class="page cover-page">
+                <div class="page-content" style="text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: none;">
+                    <h2>إهداء خاص 💖</h2>
+                    <br>
+                    <p style="font-size: 1.35rem; line-height: 2.2; max-width: 90%;">
+                        أنا عملت ليكي المفاجأة دي يا حبيبتي، يارب ما تكوني زعلانة مني، أنا بحبك جداً وأظن دي حاجة هتخليكي تعرفي هل أنا عايز أسيبك ولا لأ.. 💕
+                    </p>
+                    <br>
+                    <p style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color); font-family: 'Aref Ruqaa', serif; margin-top: 20px;">
+                        قراءة ممتعة يا روحي ✨<br><br>يلا بسم الله؟
+                    </p>
+                </div>
+            </div>
+
+            
+
+            <!-- الفصل الأول -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل الأول: شقاق العائلة.. وكرامة على المحك</h2>
+                    <p>في بداية العام، كانت الحياة تسير في مسارها الطبيعي، شاب يضع أحلامه نصب عينيه ويذاكر لبناء مستقبل آمن. ولكن فجأة، وبدون مقدمات، انهارت الجدران التي كان يستند إليها حين قرر والداه الانفصال. لم يكن مجرد خبر عابر، بل كان زلزالاً هز كيانه، وجعله يشعر أن العائلة التي طالما كانت حصنه تتسرب من بين يديه.</p>
+                    <span class="english-quote">Life is not always fair, but we have to keep going.</span>
+                    <p>في تلك اللحظات القاسية، لم يختر الهروب أو البكاء على الأطلال، بل قرر أن ينضج قبل أوانه. قال لنفسه بحسم: "الشغل مش عيب، أنا راجل وهعتمد على نفسي". نزل إلى الشارع، وابتلع كبرياءه، وعمل "عامل نظافة" في أحد المطاعم. لم يكن المجهود البدني هو ما يكسر الظهر، بل كانت نظرات بعض البشر التي لا ترحم. أن تكون شاباً متعلماً، طموحاً، وتجد من هو أقل منك وعياً ينظر إليك بتعالٍ، ويقذف في وجهك كلمات مثل: "انت رايح فين وتعمل إيه؟ انت هنا مجرد عامل نضافة!".. كانت هذه العبارات سكاكين تمزق روحه من الداخل، ورغم ذلك كان يبتلع إهانته ويكمل يومه، لأنه كان يؤمن بأن:</p>
+                    <span class="english-quote">Hard times create strong men.</span>
+                    <p>زادت الأيام قسوة حين تم اتهامه ظلماً بسرقة "تيشيرت"، ورميه بكلمات جارحة تصفه بالغباء وعدم الفهم. كان يقف صامتاً، محترقاً من الداخل، وهو يعلم علم اليقين أن يده لم تمتد لحرام قط. وجاء شهر رمضان ليزيد من قسوة الاختبار؛ وظل الشاب واقفاً على قدميه، جائعاً، مرهقاً، يتجرع قسوة البشر ومرارة الحاجة. بعد ثلاثة أشهر من هذا العذاب النفسي والجسدي، اتخذ قراره الحاسم: "يكفي هذا.. سأعود لدراستي، سأدخل الثانوية العامة، وسأثبت للجميع من أنا".</p>
+                </div>
+            </div>
+
+            <!-- الفصل الثاني -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل الثاني: سراب "هنا".. ودرس المشاعر الزائفة</h2>
+                    <p>ترك الشاب العمل خلف ظهره، ودخل مرحلة الثانوية العامة حاملاً في قلبه تحدياً كبيراً ليثبت ذاته. في خضم هذه المعركة الدراسية، ظهرت في حياته فتاة تُدعى "هنا". بدأت تراسله وتتحدث معه باستمرار، مما أدخل عقله في دوامة من التساؤلات وحالة من الـ "إيرور" التام.</p>
+                    <p>ولأنه كان يفتقد الشعور بالاهتمام في تلك الفترة الصعبة من حياته، حاول جاهداً أن يقنع نفسه بأنه معجب بها، رغم أن صوتاً خفياً بداخله كان يؤكد له أنه لا يراها سوى كأخت وزميلة. كان يحاول خلق مشاعر من العدم ليتماشى مع فكرة أن هناك من يهتم لأمره.</p>
+                    <span class="english-quote">Sometimes, you have to learn things the hard way.</span>
+                    <p>سرعان ما تكشفت الحقائق حين توقفت الدراسة. ظهرت النوايا بوضوح؛ لم تكن "هنا" معجبة به، ولم تكن تراه سوى "بنك معلومات" تستعين به وقت حاجتها للمذاكرة، وحين تنتهي الحاجة، يختفي الاهتمام. كان هذا الاكتشاف صفعة موجعة لقلبه النقي. أدرك حينها أن المشاعر لا يمكن افتعالها، فقرر بكرامة أن يطوي هذه الصفحة تماماً، ليعود إلى وحدته، يركز في حلمه ومستقبله فقط.</p>
+                    <span class="english-quote">Fake feelings hurt the most, but they teach us what is real.</span>
+                </div>
+            </div>
+
+            <!-- الفصل الثالث -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل الثالث: شرارة مايو.. وبداية النور</h2>
+                    <p>في الأول من مايو عام ٢٠٢٦، كان القدر يخبئ له بداية جديدة تماماً. دخل إلى تطبيق "ديسكورد" باحثاً عن صحبة دراسية تعينه على ملل المذاكرة. هناك، وجد صديقته "هاجر" تذاكر مع فتاة أخرى لم يعرفها من قبل، كان اسمها "سندس". في الأيام الأولى، لم تكن "سندس" بالنسبة له سوى زميلة محترمة، فتاة هادئة يبدو من حديثها حسن التربية والأخلاق.</p>
+                    <p>لكن الشرارة انطلقت في يوم غير متوقع، حين دخل إلى المحادثة العامة ووجدها تتحدث مع شخص آخر. فجأة، وبدون أي مقدمات، شعر بنيران الغيرة تشتعل في صدره. بدأ يسأل نفسه بذهول: "أنا ليه متضايق كدة؟ أنا ليه حاسس إني عايز أروح أضرب الراجل ده وأمنعه يكلمها؟". في تلك اللحظة، أدرك أنه وقع في الفخ الجميل. اكتشف أنه معجب بشدة بفتاة لم يرَ وجهها يوماً.</p>
+                    <span class="english-quote">Love comes when you least expect it.</span>
+                    <p>بمجرد أن استوعب هذه الحقيقة، اجتاحته موجة من السعادة لم يختبرها من قبل. التقط هاتفه فوراً واتصل بأحد أقرب أصدقائه، بصوت يملؤه الحماس والضحك قال له: "أنا لقيتها يا صاحبي! لقيت البنت اللي خطفت قلبي". نزل إلى الشارع، وكأن الأرض لا تسعه من الفرحة؛ اشترى أكلته المفضلة، وجلب الكثير من الحلويات. كان يمشى في الطرقات وهو يبتسم بلا سبب. بلا شك، كان هذا أفضل يوم في حياته.</p>
+                    <span class="english-quote">It was literally the best day ever.</span>
+                </div>
+            </div>
+
+            <!-- الفصل الرابع (ساعة يوم عرفة مطورة) -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل الرابع: يوم عرفة.. مناجاة الروح المنهكة</h2>
+                    <p>مرت الأيام، وزاد التعلق، حتى جاء يوم عرفة، اليوم الذي تُفتح فيه أبواب السماء لكل قلب صادق. في هذا اليوم، استيقظ الشاب من نومه بعد أن رأى "سندس" في حلمه، وكأنها رسالة ربانية لتؤكد له أن ما في قلبه ليس مجرد إعجاب عابر، بل هو حب حقيقي وصادق.</p>
+                    <p>في تمام الساعة السابعة مساءً، في تلك الساعة الذهبية التي تسبق غروب شمس يوم عرفة، حيث تتنزل الرحمات وتُعتق الرقاب، وتكون أبواب السماء مشرعة لكل قلبٍ صادق ومنكسر. جلس مع نفسه في خلوة، وعيناه تفيضان بالدموع، يسمع دقات قلبه تتسارع مع كل دعوة يرفعها للسماء. أمسك بورقة وقلم، وكتب رسالة طويلة لنفسه ولربه، وثق فيها كل ما يثقل قلبه، وكل أمنية يخاف أن ينطق بها بصوت عالٍ.</p>
+                    <p>بدأ دعاءه بأوجع ما في قلبه، عائلته المشتتة وهو يرتجف: "يارب جمع عيلتي تاني زي الأول عشان أبويا وأمي انفصلوا، يارب خليهم ليا وأكون أول واحد أموت فيهم عشان مش هقدر أتحمل خسارة حد فيهم". ثم انتقل إلى حلمه الدراسي: "يارب أخش هندسة، ولو مش ليا ارزقني بالأحسن منها". (وقد أثبتت الأيام لاحقاً صدق تسليمه العظيم لله).</p>
+                    <p>ومع اقتراب الشمس من المغيب، لم ينسَ حبيبته في دعائه الخالص، فرفع كفيه يرتجفان شوقاً ورجاءً: "يارب أتجوز البنت اللي حبيتها لو كانت ليا، ولو مش ليا يارب ارزقها بالأحسن مني واللي يستاهلها". وتدفق الدعاء بالروحانيات: "يارب انتظم في صلاتي، يارب أحفظ القرآن، يارب لو طلعت مهندس ابني بيت ليك". بكى وهو يتذكر ذنوبه وأخطاءه، ودعا الله أن يكفيه بحلاله عن حرامه. كان هذا اليوم نقطة تحول حقيقية، حيث اغتسل قلبه بالدعاء، وولدت روحه من جديد مع غياب شمس ذلك اليوم العظيم.</p>
+                </div>
+            </div>
+
+            <!-- الفصل الخامس -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل الخامس: عاصفة الامتحانات وتضحية المحب</h2>
+                    <p>دخلت السنة الدراسية في مراحلها الأكثر رعباً: فترة الامتحانات. وهنا، لم تكن المعركة معركة درجات فقط، بل كانت معركة مشاعر وأعصاب. في يوم امتحان الكيمياء، أرسلت له "سندس" رسالة تخبره فيها بأنها متعبة بشدة، ثم انقطع الاتصال ولم تخبره بتفاصيل. في اليوم التالي، الساعة الثامنة صباحاً، قبل الامتحان بساعة واحدة، حاول التواصل معها مراراً لكنها لم ترد. افترض أنها ذهبت للامتحان، وذهب هو إلى لجنته. طوال وقت الامتحان، كان جسده في اللجنة وعقله وروحه معها. كان يشعر بانقباض شديد في صدره، ألم حقيقي يعتصر قلبه، ولم يستطع التركيز في ورقة الإجابة المليئة بالأسئلة المعقدة.
+قرر أن ينهي الامتحان بأي شكل، وما إن سلم ورقته وخرج، حتى خارت قواه من شدة الضغط النفسي والقلق عليها، وسقط مغشياً عليه أمام أصدقائه الذين سارعوا بإفاقته بالماء. عاد إلى هاتفه ليكتشف الكارثة: لم تذهب للامتحان من شدة مرضها. في تلك اللحظة، نسي تعبه تماماً، وظل مستيقظاً لثلاثة أيام متواصلة، يراقب هاتفها، وينتظر استيقاظها ليطمئن عليها، ويجلس معها طوال اليوم يحاول إضحاكها وإخراجها من حالة الحزن.</p>
+                    <p>ولم يقف دعمه هنا؛ ففي يوم امتحان الأحياء، وهو اليوم الذي كان يمتحن فيه هو (رياضة تطبيقية) بعد إخفاقه في (البحتة)، قرر أن يضع خوفه جانباً. بحث في النظام الذي يتبعه واضعو الامتحانات، واستنتج ما قد يأتي، وقام بحل امتحان الدور الثاني لعام ٢٠٢٥ كاملاً، وصاغه في ملف (PDF) وبعثه لها لتستفيد منه. لم يفعل ذلك بحثاً عن شكر، أو ليُظهر نفسه كبطل، بل ليوصل لها رسالة صامتة: "حتى في أشد أوقاتي صعوبة، أنا سندك، ولن أتركك أبداً".</p>
+                    <span class="english-quote">I will never let you down, no matter what.</span>
+                </div>
+            </div>
+
+            <!-- الفصل السادس -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل السادس: بوح المشاعر..</h2>
+                    <p>قبل امتحان اللغة الفرنسية بيوم واحد، وتحديداً في يوم ٢٢ يونيو ٢٠٢٦، لم يكن البوح مخططاً له، بل جاء فجأة كـ</p>
+                    <span class="english-quote">A beautiful accident.</span>
+                    <p>بدأت القصة حين فتحت "سندس" موضوعاً حول كلام قاله شخص يُدعى "مهند"، لتسأله بتوتر: "يعني الكلام اللي قاله مهند مش صح؟؟". حين أصرّ على معرفة ما قاله مهند، أخبرته أن مهند قال لها إنها "تبعُه". في تلك اللحظة، توقفت أنفاس الشاب، وأرسلت له هي بخجل وارتباك: "إيدي بتترعش الله يسامحك".</p>
+                    <p>هنا لم يعد قادراً على كتمان ما يعتريه. رد عليها بصدق عفوي قائلاً: "انتي متعرفيش أنا دماغي صدعت وضربات قلبي زادت وحسيت إني حران أوي ومتوتر.. والله هموت فيها".</p>
+                    <p>سألته بتعجب وبراءة: "طب ليه؟ أو اشمعنا أنا؟"</p>
+                    <p>أجابها بكل وضوح: "ما أعرفش، ممكن طريقة كلامك محترمة ومش بتشتمي.. أكتر من حاجة كمان كنت شايفك مميزة فيها عن غيرك". وحين أذن العصر، طلب منها أن تقوم لتصلي، فبادلته نفس الطلب قائلة: "قوم صلي.. بطل برود".</p>
+                    <p>رد عليها قبل أن يذهب للصلاة بسعادة غامرة: "النهارده يوم ليس له مثيل.. أحلام العصر بتتحقق".</p>
+                    <span class="english-quote">The moment of truth finally arrived.</span>
+                    <p>وبعد أن عاد من الصلاة، وبخوف المحب على مستقبل حبيبته، قال لها: "متخليش حاجة تأثر على مذاكرتك.. طز فيّا". ولكن المفاجأة الجميلة جاءت منها حين ذكّرته بموقف قديم ("يوم الخيانة العظمى") وقالت: "المفروض أقول نفس الكلمة". في تلك اللحظة، أيقن أن قلبه قد وصل إلى بر الأمان.</p>
+                    <span class="english-quote">She was the missing piece of my soul.</span>
+                </div>
+            </div>
+
+            <!-- الفصل السابع -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل السابع: النتيجة.. وعهد الرجال</h2>
+                    <p> وجاء يوم النتيجة المرعب. بينما كان الجميع يهرول للبحث عن مجاميعهم، كان هو يجلس أمام الشاشة، وقلبه ينبض بخوف شديد عليها. حين ظهرت النتيجة، أغلق الصفحة فوراً قبل أن يرى درجاته. اتصل بها سريعاً، فشعر ببعض الراحة حين علم أن أهلها بجوارها.</p>
+                    <p>علم أنها إذا تمكنت من اجتياز امتحان الكيمياء (الذي لم تدخله) في العام القادم بالدرجة النهائية، ستتمكن من دخول كلية الصيدلة. هنا، وقف الشاب وقفة رجولة، وأقسم عهداً صارماً كُتب بماء الذهب:</p>
+                    <p style="font-weight: bold; color: var(--primary-color); text-align: center; padding: 15px; border: 2px dashed var(--border-color); border-radius: 10px; margin: 20px 0; background: var(--poetry-bg);">
+                        "أول ما تبدأي مذاكرة، أنا هذاكر معاكي. وحتى لو أنا لغات، هدرس المنهج بالعربي مخصوص عشانك، وهفضل معاكي خطوة بخطوة لحد ما تقفلي الامتحان وتدخلي صيدلة بإذن الله".
+                    </p>
+                    <span class="english-quote">A true man always keeps his promises.</span>
+                </div>
+            </div>
+
+            <!-- الفصل الثامن - 1 -->
+            <div class="page">
+                <div class="page-content">
+                    <h2>الفصل الثامن: قصائد الروح وطريق النور</h2>
+                    <p>لم تكن "سندس" بالنسبة له مجرد قصة حب، بل كانت رزقاً ساقه الله لينقذه من نفسه. بفضل وجودها، تغيرت حياته جذرياً. هجر سماع الأغاني، وعاد للانتظام في صلاته، وتحسنت علاقته بأهله.</p>
+                    <span class="english-quote">She was my guiding light in the dark.</span>
+                    <p>وبعد كل هذه المشاعر، وفي يوم 7/6/2026، كتب لها قصيدة تعبر عن مدى تعلقه بها قائلاً:</p>
+                    
+                    <div class="poetry">سُندسُ يا نورًا تألَّقَ في سماها،
+يا زهرةً فاحَ الجمالُ شذاها.
+
+ما مرَّ طيفُكِ في فؤادي لحظةً،
+إلّا وأشرقَ بالسرورِ سناها.
+
+إن ضحكتِ أزهرتْ سنينُ حياتي،
+وكأنَّ روحي قد وجدتْ مُناها.
+
+أقسمتُ أن يبقى هواكِ بداخلِي،
+ما دامَ قلبي في الحياةِ هواها.
+
+إن غبتِ عن عينيَّ يومًا واحدًا،
+أمسى الزمانُ يطولُ في مداها.</div>
+                </div>
+            </div>
+
+            <!-- الفصل الثامن - 2 -->
+            <div class="page">
+                <div class="page-content">
+                    <div class="poetry">وإذا حضرتِ تراقصتْ نبضاتُ قلبي،
+فرحًا كعصفورٍ رأى دنياهَا.
+
+ما كنتُ أدري أنَّ حبًّا صادقًا،
+قد يملأُ الأرواحَ حتى منتهاها.
+
+فإذا سألتِ الناسَ يومًا من أنا،
+قالوا: فتىً جعلَ سُندسَ مُبتغاها.
+
+وأخافُ يومًا أن يطولَ تباعدٌ،
+فتغيبَ عن عينيَّ كلُّ رُباها.
+
+وأغارُ حتى من ترابٍ لامسَتْهُ،
+وأودُّ لو أمسى الفؤادُ خُطاها.
+
+ما خِفتُ في عمري اللياليَ كلَّها،
+لكنَّ خوفي أن أفارقَ رؤاها.
+
+فإن كتبَ الرحمنُ أن نبقى معًا،
+فحياتي كلُّها ستكونُ رضاها.</div>
+
+                    <p>وكذلك قصيدته التي عبر فيها عن توبته وعودته إلى الله بفضلها:</p>
+                    <div class="poetry">دونَ أنْ أنظرَ إلى عينيكِ،
+أحببتُكِ، ووجدتُ السكينةَ في نداكِ.
+كيفَ كنتُ أعيشُ قبلَ لقاكِ؟
+وأنا اليومَ غارقٌ في هواكِ.</div>
+                </div>
+            </div>
+
+            <!-- الفصل الثامن - 3 -->
+            <div class="page">
+                <div class="page-content">
+                    <div class="poetry">وإنْ طالتِ الأيامُ ما عدتُ أنساكِ،
+فقلبي على مرِّ الليالي يهواكِ.
+وإنْ ضاقَ صدري من همومٍ أثقلتْ،
+رأيتُ الأمانَ بكلِّ حرفٍ ناداكِ.
+
+هجرتُ لَهوَ الأغاني يومَ أرشدتِني،
+فازدادَ قلبي طُهرًا بهُداكِ.
+وعُدتُ إلى ربِّي بقلبٍ تائبٍ،
+فالحمدُ للهِ الذي يسَّرَ لُقاكِ.</div>
+                    
+                    <p>حتى في أوقات الخلاف البسيطة، حين تدللت عليه ذات مرة وقالت له "مخصماك"، لم يقابل ذلك بجفاء، بل صاغ لها أبياتاً تقطر رقة ليصالحها:</p>
+
+                    <div class="poetry">يَا نُورَ عَيْنِي وَيَا أَغْلَى مِنَ النَّسَمِ
+لا تَحْرِمِينِي صَفَاءَ الوَجْهِ وَالابْتِسَمِ
+
+إنْ كَانَ قَلْبُكِ قَدْ أَمْسَى بِهِ زَعَلٌ
+فَالْحَقُّ عِنْدَكِ وَالتَّقْصِيرُ مِنْ قَلَمِي
+
+رِضَاكِ عِنْدِي هُوَ الدُّنْيَا وَمَا حَوَتِ
+وَبَعْدَ صَدِّكِ كُلُّ العُمْرِ كَالْعَدَمِ
+
+فَصَالِحِينِي وَرُدِّي الرُّوحَ فِي جَسَدِي
+لا يَعْرِفُ القَلْبُ حُبًّا غَيْرَ حُبِّكُمِ</div>
+                </div>
+            </div>
+
+            <!-- النهاية -->
+           <div class="page cover-page">
+                <div class="page-content" style="text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center;">
+                    <h2>النهاية.. التي هي مجرد بداية</h2>
+                    <br>
+                    <p>هذه ليست نهاية القصة، بل هي فصل الختام لمرحلة من التعب وبداية لمرحلة من النضج والاستقرار. الشاب الذي كُسرت نفسه في عمل قاسٍ، وجد العوض في حلم جديد ومشاعر صادقة.</p>
+                    <p>لم تكن الدرجات هي نهاية المطاف، بل كانت "سندس" هي الجائزة الكبرى، وطوق النجاة الذي سحبه من ظلمات التشتت إلى نور اليقين والحب الصادق.</p>
+                    <p>رحلة مستمرة، يجمعهم فيها وعد بالبقاء، ويحرسهم فيها دعاء يوم عرفة الذي صعد للسماء ولن يضيع أبداً.</p>
+                    <br>
+                    <span class="english-quote" style="text-align: center; border: none; font-size: 1.5rem; background: transparent; color: var(--primary-color);">
+                        "And they will walk this beautiful journey together, forever..."
+                    </span>
+                </div>
+            </div>
+
+           <div class="page">
+                <div class="page-content">
+                    <h2>ألبوم الذكريات 📸</h2>
+                    <p style="text-align: center; font-style: italic; opacity: 0.8;">"لحظات صغيرة صنعت أجمل الحكايات..."</p>
+                    
+                    <div class="polaroid-container">
+                        <div class="polaroid-card">
+                            <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?q=80&w=600&auto=format&fit=crop" alt="أول حديث">
+                            <div class="polaroid-caption">شرارة البداية ✨</div>
+                        </div>
+                        <div class="polaroid-card">
+                            <img src="https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?q=80&w=600&auto=format&fit=crop" alt="دعاء عرفة">
+                            <div class="polaroid-caption">دعوة يوم عرفة 🤲</div>
+                        </div>
+                        <div class="polaroid-card">
+                            <img src="https://i.pinimg.com/originals/29/b1/31/29b131b7b09d01f8ee74f92b16f025c1.jpg" alt="عهد الدراسة">
+                            <div class="polaroid-caption">عهد الصيدلة 🩺</div>
+                        </div>
+                        <div class="polaroid-card">
+                            <img src="https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?q=80&w=600&auto=format&fit=crop" alt="الحب والدعم">
+                            <div class="polaroid-caption">وعد البقاء 💍</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page cover-page">
+                <div class="page-content" style="text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div style="position: relative; padding: 40px; border: 3px dashed var(--border-color); border-radius: 20px; background: var(--poetry-bg); box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+                        <span style="position: absolute; top: -25px; left: -25px; font-size: 3.5rem; transform: rotate(-15deg);">🌸</span>
+                        <span style="position: absolute; top: -25px; right: -25px; font-size: 3.5rem; transform: rotate(15deg);">🌺</span>
+                        
+                        <h1 style="font-size: 4rem; margin: 0; color: var(--primary-color); text-shadow: 2px 2px 4px rgba(0,0,0,0.1); line-height: 1.5;">بحبك يا سُندس</h1>
+                        
+                        <span style="position: absolute; bottom: -25px; left: -25px; font-size: 3.5rem; transform: rotate(-25deg);">🌷</span>
+                        <span style="position: absolute; bottom: -25px; right: -25px; font-size: 3.5rem; transform: rotate(25deg);">🌹</span>
+                    </div>
+                    <br>
+<a href="https://wa.me/201096925903?text=أنا%20خلصت%20الكتاب%20يا%20حبيبي..%20بحبك%20جداً!%20💖" class="whatsapp-btn" target="_blank">
+    دوسي هنا وكلميني 💚
+</a>
+                </div>
+            </div>
+
+        </div> <button id="nextBtn" class="nav-btn" onclick="turnPage('next')">التالي &#10094;</button>
+    </div>
+
+    <script>
+        const themes = [
+            { 
+                bg: 'url("https://images.unsplash.com/photo-1562690868-60bbe7293e94?q=80&w=2000&auto=format&fit=crop")',
+                primary: '#8b1e41', hover: '#a8244e', bookBg: '#fffdf8', text: '#2c2c2c', poetry: 'rgba(235, 213, 222, 0.3)', border: '#d5a6b8', overlay: 'rgba(0,0,0,0.3)'
+            },
+            { 
+                bg: 'url("https://images.unsplash.com/photo-1560790671-b76ca4de55ef?q=80&w=2000&auto=format&fit=crop")',
+                primary: '#1e3a8a', hover: '#2563eb', bookBg: '#f0f4f8', text: '#1e293b', poetry: 'rgba(219, 234, 254, 0.4)', border: '#93c5fd', overlay: 'rgba(0,0,0,0.6)'
+            },
+            { 
+                bg: 'url("https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=2000&auto=format&fit=crop")',
+                primary: '#166534', hover: '#15803d', bookBg: '#f7fee7', text: '#14532d', poetry: 'rgba(220, 252, 231, 0.5)', border: '#86efac', overlay: 'rgba(0,0,0,0.4)'
+            },
+            { 
+                bg: 'url("https://images.unsplash.com/photo-1596704017254-9b121068fb31?q=80&w=2000&auto=format&fit=crop")',
+                primary: '#78350f', hover: '#92400e', bookBg: '#fff7ed', text: '#431407', poetry: 'rgba(255, 237, 213, 0.5)', border: '#fdba74', overlay: 'rgba(0,0,0,0.5)'
+            },
+            { 
+                bg: 'url("https://images.unsplash.com/photo-1496062031456-07b8f162a322?q=80&w=2000&auto=format&fit=crop")',
+                primary: '#6b21a8', hover: '#7e22ce', bookBg: '#faf5ff', text: '#3b0764', poetry: 'rgba(243, 232, 255, 0.5)', border: '#d8b4fe', overlay: 'rgba(0,0,0,0.4)'
+            }
+        ];
+        function setTheme(index) {
+            const t = themes[index];
+            const root = document.documentElement;
+            
+            root.style.setProperty('--bg-image', t.bg);
+            root.style.setProperty('--primary-color', t.primary);
+            root.style.setProperty('--btn-hover', t.hover);
+            root.style.setProperty('--book-bg', t.bookBg);
+            root.style.setProperty('--text-color', t.text);
+            root.style.setProperty('--poetry-bg', t.poetry);
+            root.style.setProperty('--border-color', t.border);
+            root.style.setProperty('--overlay-color', t.overlay);
+            document.querySelectorAll('.theme-btn').forEach((btn, i) => {
+                if(i === index) {
+                    btn.style.transform = 'scale(1.2) translateY(5px)';
+                    btn.style.boxShadow = '0 0 15px rgba(255,255,255,0.9)';
+                    btn.style.border = '2px solid white';
+                } else {
+                    btn.style.transform = 'scale(1)';
+                    btn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.5)';
+                    btn.style.border = '2px solid rgba(255,255,255,0.5)';
+                }
+            });
+        }
+        window.onload = () => {
+            setTheme(0);
+            updateButtons();
+        };
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 800);
+            }, 2500); 
+        });
+        let currentPage = 0;
+        const pages = document.querySelectorAll('.page');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        let isAnimating = false;
+
+        function updateButtons() {
+            prevBtn.disabled = currentPage === 0;
+            nextBtn.disabled = currentPage === pages.length - 1;
+            
+            const pageIndicator = document.getElementById('pageIndicator');
+            if (pageIndicator) {
+                pageIndicator.innerText = `صفحة ${currentPage + 1} من ${pages.length}`;
+            }
+        }
+
+        function turnPage(direction) {
+            if (isAnimating) return;
+            
+            const pageSound = document.getElementById('pageTurnSound');
+            if (pageSound) {
+                pageSound.currentTime = 0; 
+                pageSound.play().catch(e => console.log("يجب التفاعل مع الصفحة أولاً لتشغيل الصوت"));
+            }
+            let newPage = currentPage;
+            if (direction === 'next' && currentPage < pages.length - 1) {
+                newPage++;
+            } else if (direction === 'prev' && currentPage > 0) {
+                newPage--;
+            } else {
+                return;
+            }
+
+            isAnimating = true;
+            const oldElement = pages[currentPage];
+            const newElement = pages[newPage];
+
+            pages.forEach(p => {
+                p.classList.remove('flip-out-next', 'flip-in-next', 'flip-out-prev', 'flip-in-prev');
+            });
+
+            if (direction === 'next') {
+                oldElement.classList.add('flip-out-next');
+                newElement.classList.add('active', 'flip-in-next');
+            } else {
+                oldElement.classList.add('flip-out-prev');
+                newElement.classList.add('active', 'flip-in-prev');
+            }
+
+            newElement.scrollTop = 0;
+
+            setTimeout(() => {
+                oldElement.classList.remove('active');
+                currentPage = newPage;
+                isAnimating = false;
+                updateButtons();
+            }, 1000); 
+        }
+        const sidebar = document.getElementById('sidebar');
+        const settingsToggle = document.getElementById('settingsToggle');
+        const bgMusic = document.getElementById('bgMusic');
+        const volumeControl = document.getElementById('volumeControl');
+        const playBtn = document.getElementById('playBtn');
+        let isPlaying = false;
+
+        // فتح وقفل القائمة الجانبية
+        settingsToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // التحكم في مستوى الصوت
+        bgMusic.volume = volumeControl.value;
+        volumeControl.addEventListener('input', (e) => {
+            bgMusic.volume = e.target.value;
+        });
+
+        // تشغيل وإيقاف الأغنية
+        function togglePlay() {
+            if (isPlaying) {
+                bgMusic.pause();
+                isPlaying = false;
+                playBtn.innerText = "تشغيل الموسيقى";
+            } else {
+                bgMusic.play().catch(error => console.log("يجب التفاعل مع الصفحة أولاً لتشغيل الصوت"));
+                isPlaying = true;
+                playBtn.innerText = "إيقاف الموسيقى";
+            }
+        }
+
+        function updateLoveCounter() {
+            const startDate = new Date("2026-05-02T00:00:00");
+            const now = new Date();
+            const diff = now - startDate;
+
+            if (diff > 0) {
+                const totalDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                const minutes = Math.floor((diff / 1000 / 60) % 60);
+                const seconds = Math.floor((diff / 1000) % 60);
+
+                const months = Math.floor(totalDays / 30);
+                const remainingDays = totalDays % 30;
+                const weeks = Math.floor(remainingDays / 7);
+                const days = remainingDays % 7;
+
+                let timeString = "";
+                if (months > 0) timeString += `${months} شهور و `;
+                if (weeks > 0) timeString += `${weeks} أسابيع و `;
+                timeString += `${days} ايام`;
+
+                const clockString = 
+                    String(hours).padStart(2, '0') + ":" + 
+                    String(minutes).padStart(2, '0') + ":" + 
+                    String(seconds).padStart(2, '0');
+
+                document.getElementById('time-text').innerText = timeString;
+                document.getElementById('time-clock').innerText = clockString;
+            } else {
+                document.getElementById('time-text').innerText = "في انتظار اللقاء...";
+            }
+        }
+        setInterval(updateLoveCounter, 1000);
+        updateLoveCounter(); 
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                turnPage('next'); 
+            } else if (e.key === 'ArrowRight') {
+                turnPage('prev'); 
+            }
+        });
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let currentThemeIndex = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(theme) {
+                this.reset(theme);
+            }
+
+            reset(theme) {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * -100;
+                this.size = Math.random() * 8 + 6;
+                this.speedY = Math.random() * 1.2 + 0.6;
+                this.speedX = Math.random() * 0.6 - 0.3;
+                this.swayAngle = Math.random() * Math.PI * 2;
+                this.swaySpeed = Math.random() * 0.03 + 0.01;
+                this.opacity = Math.random() * 0.6 + 0.4;
+                this.rotation = Math.random() * 360;
+                this.rotSpeed = Math.random() * 1.5 - 0.75;
+            }
+
+            update(theme) {
+                this.swayAngle += this.swaySpeed;
+                this.x += Math.sin(this.swayAngle) * 0.8 + this.speedX;
+                this.y += this.speedY;
+                this.rotation += this.rotSpeed;
+
+                if (this.y > canvas.height + 20) {
+                    this.reset(theme);
+                }
+            }
+
+            draw(theme) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate((this.rotation * Math.PI) / 180);
+                ctx.globalAlpha = this.opacity;
+
+                ctx.beginPath();
+                if (theme === 0) ctx.fillStyle = '#e63946';       
+                else if (theme === 1) ctx.fillStyle = '#60a5fa';  
+                else if (theme === 2) ctx.fillStyle = '#4ade80';  
+                else if (theme === 3) ctx.fillStyle = '#fb923c';  
+                else if (theme === 4) ctx.fillStyle = '#c084fc';  
+
+                ctx.moveTo(0, -this.size);
+                ctx.quadraticCurveTo(this.size, 0, 0, this.size);
+                ctx.quadraticCurveTo(-this.size, 0, 0, -this.size);
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, -this.size + 2);
+                ctx.lineTo(0, this.size - 2);
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = 40; 
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(currentThemeIndex));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update(currentThemeIndex);
+                p.draw(currentThemeIndex);
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        const originalSetTheme = setTheme;
+        setTheme = function(index) {
+            originalSetTheme(index);
+            currentThemeIndex = index;
+            initParticles();
+        };
+
+        initParticles();
+        animateParticles();
+    </script>
+</body>
+</html>
